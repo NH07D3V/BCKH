@@ -35,6 +35,11 @@ MODEL_SPECS = (
 )
 
 
+def project_relative(path: Path) -> str:
+    """Return a portable POSIX path for manifests committed to Git."""
+    return path.relative_to(PROJECT_ROOT).as_posix()
+
+
 def main() -> None:
     dataset_dir = PROJECT_ROOT / "data" / "raw" / "UIT-ViQuAD2.0"
     dataset_source_dir = PROJECT_ROOT / "data" / "raw" / "UIT-ViQuAD2.0_source"
@@ -58,7 +63,7 @@ def main() -> None:
                 "role": spec["role"],
                 "repo_id": spec["repo_id"],
                 "revision": spec["revision"],
-                "local_dir": str(model_dir),
+                "local_dir": project_relative(model_dir),
             }
         )
 
@@ -106,8 +111,8 @@ def main() -> None:
         "dataset": {
             "repo_id": DATASET_ID,
             "revision": DATASET_REVISION,
-            "local_dir": str(dataset_dir),
-            "source_parquet_dir": str(dataset_source_dir),
+            "local_dir": project_relative(dataset_dir),
+            "source_parquet_dir": project_relative(dataset_source_dir),
             "splits": split_summary,
         },
     }

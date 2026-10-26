@@ -86,7 +86,7 @@ Chỉ sau khi các cell train/dev được khóa mới mở held-out test hoặc
 ## 6. Lệnh chạy
 
 ```powershell
-cd C:\Users\Administrator\Desktop\BaoCaoKhoaHoc
+cd <repo-root>
 python code\verify_assets.py
 python code\train_qlora_baseline.py --config configs\sailor2_qlora_vi.yaml --max-steps 20 --output-dir checkpoints\sailor2_smoke
 python code\train_qlora_baseline.py --config configs\baseline_qlora_vi.yaml --max-steps 20 --output-dir checkpoints\qwen_smoke

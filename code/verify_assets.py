@@ -12,6 +12,11 @@ EXPECTED_MODEL_SHA256 = {
     "Sailor2-1B-Chat": "3dd03235ed8fa190979856875c523d4e50b20577fa1b188f7075d6b8d22a09d7",
     "Qwen2.5-0.5B-Instruct": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
 }
+
+
+def project_relative(path: Path) -> str:
+    """Return a portable POSIX path for manifests committed to Git."""
+    return path.relative_to(ROOT).as_posix()
 EXPECTED_PARQUET_SHA256 = {
     "train-00000-of-00001.parquet": "6e68a0c8fb6fa3c7f89e5b3825e3b3e96fd66913db89a9bdfcaf8fa2b5469e19",
     "validation-00000-of-00001.parquet": "8c81bdd75bd39eeff98df769f2282453397fa8c7004085e4fe3fc6e419733ae0",
@@ -45,7 +50,7 @@ def main() -> None:
         if actual_hash != expected:
             raise RuntimeError(f"Model hash mismatch for {model_name}: {actual_hash}")
         model_hashes[model_name] = actual_hash
-        model_paths[model_name] = str(model_file)
+        model_paths[model_name] = project_relative(model_file)
     parquet_hashes = {}
     parquet_root = ROOT / "data/raw/UIT-ViQuAD2.0_source/data"
     for filename, expected in EXPECTED_PARQUET_SHA256.items():

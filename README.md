@@ -58,7 +58,7 @@ BaoCaoKhoaHoc/
 Từ PowerShell:
 
 ```powershell
-cd C:\Users\Administrator\Desktop\BaoCaoKhoaHoc
+cd <repo-root>
 python -m pip install -r environment\requirements-download.txt
 python code\download_assets.py
 python code\prepare_viquad.py --create-dev

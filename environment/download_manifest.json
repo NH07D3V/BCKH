@@ -4,39 +4,39 @@
     "role": "primary",
     "repo_id": "sail/Sailor2-1B-Chat",
     "revision": "51b48ecd7c0629e4c79dc927a0445e6b671d8692",
-    "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Sailor2-1B-Chat"
+    "local_dir": "models/base/Sailor2-1B-Chat"
   },
   "primary_model": {
     "role": "primary",
     "repo_id": "sail/Sailor2-1B-Chat",
     "revision": "51b48ecd7c0629e4c79dc927a0445e6b671d8692",
-    "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Sailor2-1B-Chat"
+    "local_dir": "models/base/Sailor2-1B-Chat"
   },
   "control_model": {
     "role": "control",
     "repo_id": "Qwen/Qwen2.5-0.5B-Instruct",
     "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-    "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Qwen2.5-0.5B-Instruct"
+    "local_dir": "models/base/Qwen2.5-0.5B-Instruct"
   },
   "models": [
     {
       "role": "primary",
       "repo_id": "sail/Sailor2-1B-Chat",
       "revision": "51b48ecd7c0629e4c79dc927a0445e6b671d8692",
-      "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Sailor2-1B-Chat"
+      "local_dir": "models/base/Sailor2-1B-Chat"
     },
     {
       "role": "control",
       "repo_id": "Qwen/Qwen2.5-0.5B-Instruct",
       "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-      "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Qwen2.5-0.5B-Instruct"
+      "local_dir": "models/base/Qwen2.5-0.5B-Instruct"
     }
   ],
   "dataset": {
     "repo_id": "taidng/UIT-ViQuAD2.0",
     "revision": "406f09a45cc106a8f7b7fd0c25078883fe58cb1f",
-    "local_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\data\\raw\\UIT-ViQuAD2.0",
-    "source_parquet_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\data\\raw\\UIT-ViQuAD2.0_source",
+    "local_dir": "data/raw/UIT-ViQuAD2.0",
+    "source_parquet_dir": "data/raw/UIT-ViQuAD2.0_source",
     "splits": {
       "train": {
         "rows": 28454,

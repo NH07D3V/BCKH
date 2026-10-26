@@ -20,11 +20,12 @@ Test whether early quantization residual and stochastic gradient geometry predic
 - QLoRA 4-bit NF4 with double quantization.
 - LoRA rank 8, alpha 16, dropout 0.05.
 - Target modules: `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj`.
-- Sequence length 512; per-device batch 1; gradient accumulation 8.
-- Learning rate `2e-4`; one epoch; warmup ratio 0.03; gradient checkpointing enabled.
+- Sequence length 512; **effective batch size 8**.
+- Main throughput configuration: per-device batch 4, gradient accumulation 2, gradient checkpointing disabled, and TF32 enabled when supported. This keeps the effective batch and data/step budget fixed while reducing activation-recompute overhead; every primary/control run uses the same settings.
+- Learning rate `2e-4`; one epoch; warmup ratio 0.03.
 - Seeds: 13, 37, 73 for the primary baseline and control.
 - Full baseline uses the same recipe for both models; only local model/revision and output directory differ.
-- Evaluation/checkpoint frequency is an operational override of 1,000 steps for long runs; it does not change optimization.
+- Evaluation frequency is an operational override of 1,000 steps and checkpoint frequency is 250 steps for long runs; these do not change optimization.
 
 ## Fixed formatting and scoring
 
