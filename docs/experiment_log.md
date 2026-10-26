@@ -56,3 +56,11 @@
 - Resumed Sailor2 seed 13 from `checkpoints/baseline_sailor2_seed13/checkpoint-250` with the selected throughput configuration.
 - Current process: `26296`; baseline supervisor: `8472`; evaluation supervisor: `3484`; telemetry supervisor: `11892`.
 - At the first live check, GPU utilization was `98%` and VRAM was approximately `7.9 / 8.0 GiB`; no OOM observed.
+
+## 2026-10-26 — Sailor2 seed 13 completed
+
+- One-epoch training and final grouped-dev evaluation completed successfully.
+- Train loss: `1.2607`; final dev loss: `2.332`.
+- Train wall-clock: `6,976s` (~1h56m) with the accelerated batch/TF32 configuration.
+- Final adapter and `run_metrics.json` are in `checkpoints/baseline_sailor2_seed13`.
+- The original supervisor treated a harmless Windows CUDA warning on stderr as a failure before seed 37. The supervisor was hardened to use isolated stdout/stderr files and process exit codes; seed 37 was then restarted successfully.

@@ -43,6 +43,7 @@ foreach ($run in $runs) {
 
     $logDir = "logs\$($run.Name)"
     $stdoutLog = "$logDir\stdout.log"
+    $stderrLog = "$logDir\stderr.log"
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
     $checkpoint = Get-ChildItem -Path $run.Output -Directory -Filter 'checkpoint-*' -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match '^checkpoint-\d+$' } |
@@ -63,9 +64,18 @@ foreach ($run in $runs) {
         $commandArgs += @('--resume-from-checkpoint', $checkpoint.FullName)
     }
     Write-Host "Starting $($run.Name)"
-    & python code\train_qlora_baseline.py @commandArgs 2>&1 | Tee-Object -FilePath $stdoutLog
-    if ($LASTEXITCODE -ne 0) {
-        throw "Training failed for $($run.Name) with exit code $LASTEXITCODE"
+    # Use Start-Process so harmless CUDA/Transformers warnings on stderr do
+    # not become terminating PowerShell errors under ErrorActionPreference=Stop.
+    $process = Start-Process -FilePath 'python' `
+        -ArgumentList (@('code\train_qlora_baseline.py') + $commandArgs) `
+        -WorkingDirectory (Get-Location).Path `
+        -RedirectStandardOutput $stdoutLog `
+        -RedirectStandardError $stderrLog `
+        -WindowStyle Hidden `
+        -Wait `
+        -PassThru
+    if ($process.ExitCode -ne 0) {
+        throw "Training failed for $($run.Name) with exit code $($process.ExitCode)"
     }
 }
 

@@ -4,6 +4,22 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
 $env:PYTHONIOENCODING = 'utf-8'
 
+function Invoke-PythonLogged {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [Parameter(Mandatory = $true)][string]$LogPrefix
+    )
+    $process = Start-Process -FilePath 'python' `
+        -ArgumentList $Arguments `
+        -WorkingDirectory (Get-Location).Path `
+        -RedirectStandardOutput "$LogPrefix.stdout.log" `
+        -RedirectStandardError "$LogPrefix.stderr.log" `
+        -WindowStyle Hidden `
+        -Wait `
+        -PassThru
+    return [int]$process.ExitCode
+}
+
 $runs = @(
     @{ Name = 'sailor2_seed13'; Adapter = 'checkpoints\baseline_sailor2_seed13' },
     @{ Name = 'sailor2_seed37'; Adapter = 'checkpoints\baseline_sailor2_seed37' },
@@ -28,23 +44,23 @@ foreach ($run in $runs) {
     }
     New-Item -ItemType Directory -Force -Path 'results' | Out-Null
     $common = @('--adapter', $run.Adapter, '--data-file', 'data\splits\grouped_holdout\dev.jsonl', '--split', 'validation', '--max-new-tokens', '64', '--batch-size', '2', '--output', $prediction)
-    & python code\generate_predictions.py @common 2>&1 | Tee-Object -FilePath "logs\$($run.Name)_generation.log"
-    if ($LASTEXITCODE -ne 0) {
+    $exitCode = Invoke-PythonLogged -Arguments (@('code\generate_predictions.py') + $common) -LogPrefix "logs\$($run.Name)_generation"
+    if ($exitCode -ne 0) {
         Write-Host "Batch generation failed for $($run.Name); retrying with batch size 1"
         $common = @('--adapter', $run.Adapter, '--data-file', 'data\splits\grouped_holdout\dev.jsonl', '--split', 'validation', '--max-new-tokens', '64', '--batch-size', '1', '--output', $prediction)
-        & python code\generate_predictions.py @common 2>&1 | Tee-Object -FilePath "logs\$($run.Name)_generation_retry.log"
+        $exitCode = Invoke-PythonLogged -Arguments (@('code\generate_predictions.py') + $common) -LogPrefix "logs\$($run.Name)_generation_retry"
     }
-    if ($LASTEXITCODE -ne 0) {
+    if ($exitCode -ne 0) {
         throw "Generation failed for $($run.Name)"
     }
-    & python code\evaluate_vi.py $prediction --output $metrics 2>&1 | Tee-Object -FilePath "logs\$($run.Name)_evaluation.log"
-    if ($LASTEXITCODE -ne 0) {
+    $exitCode = Invoke-PythonLogged -Arguments @('code\evaluate_vi.py', $prediction, '--output', $metrics) -LogPrefix "logs\$($run.Name)_evaluation"
+    if ($exitCode -ne 0) {
         throw "Evaluation failed for $($run.Name)"
     }
 }
 
-& python code\make_results_table.py 2>&1 | Tee-Object -FilePath 'logs\baseline_summary.log'
-if ($LASTEXITCODE -ne 0) {
+$exitCode = Invoke-PythonLogged -Arguments @('code\make_results_table.py') -LogPrefix 'logs\baseline_summary'
+if ($exitCode -ne 0) {
     throw 'Baseline summary assembly failed'
 }
 
