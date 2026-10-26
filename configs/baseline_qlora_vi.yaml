@@ -1,0 +1,56 @@
+project_name: qga_lora_vi
+seed_list: [13, 37, 73]
+
+# Control model. The primary Vietnamese-adapted condition is defined in
+# configs/sailor2_qlora_vi.yaml.
+model:
+  role: control
+  id: Qwen/Qwen2.5-0.5B-Instruct
+  revision: 7ae557604adf67be50417f59c2c2f167def9a775
+  local_dir: models/base/Qwen2.5-0.5B-Instruct
+
+dataset:
+  id: taidng/UIT-ViQuAD2.0
+  revision: 406f09a45cc106a8f7b7fd0c25078883fe58cb1f
+  local_dir: data/raw/UIT-ViQuAD2.0
+  processed_dir: data/processed
+  train_file: data/processed/train.jsonl
+  validation_file: data/processed/validation.jsonl
+  grouped_holdout_dir: data/splits/grouped_holdout
+  train_split: train
+  validation_split: validation
+  test_split: test
+  test_labels_available: false
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  compute_dtype: auto
+
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+training:
+  max_length: 512
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 0.0002
+  num_train_epochs: 1
+  warmup_ratio: 0.03
+  logging_steps: 10
+  save_steps: 250
+  eval_steps: 250
+  gradient_checkpointing: true
+  output_dir: checkpoints/baseline_qlora_vi
+  logging_dir: logs/baseline_qlora_vi
+
+evaluation:
+  metric: exact_match_and_f1
+  max_new_tokens: 64
+  temperature: 0.0
+

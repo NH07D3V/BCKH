@@ -1,0 +1,30 @@
+# Python and local tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.env
+
+# Downloaded base models and generated checkpoints (too large for Git)
+models/
+checkpoints/
+
+# Downloaded/processed datasets (track scripts and configs, not data artifacts)
+data/raw/
+data/processed/
+data/splits/
+
+# Runtime logs and temporary outputs
+logs/
+results/*.jsonl
+results/*predictions*
+
+# OS/editor files
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/

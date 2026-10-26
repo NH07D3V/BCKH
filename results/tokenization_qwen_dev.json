@@ -1,0 +1,55 @@
+{
+  "model_dir": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\models\\base\\Qwen2.5-0.5B-Instruct",
+  "split": "C:\\Users\\Administrator\\Desktop\\BaoCaoKhoaHoc\\data\\splits\\grouped_holdout\\dev.jsonl",
+  "rows": 2866,
+  "max_length": 512,
+  "prompt_exceeds_limit": 60,
+  "prompt_exceeds_limit_fraction": 0.0209351011863224,
+  "full_sequence_exceeds_limit": 83,
+  "full_sequence_exceeds_limit_fraction": 0.02896022330774599,
+  "mean_full_tokens": 299.15910676901603,
+  "mean_answer_tokens": 13.27215631542219,
+  "sha256_split": "0ef61fb688c1fab1296a10c1389d6c4bd854e12555e9b9563a541a8843e28280",
+  "examples": [
+    {
+      "id": "0001-0001-0001",
+      "full_tokens": 269,
+      "prompt_tokens": 264,
+      "answer_tokens": 5,
+      "clipped_tokens": 269,
+      "prompt_exceeds_limit": false
+    },
+    {
+      "id": "0001-0001-0002",
+      "full_tokens": 264,
+      "prompt_tokens": 261,
+      "answer_tokens": 3,
+      "clipped_tokens": 264,
+      "prompt_exceeds_limit": false
+    },
+    {
+      "id": "0001-0001-0003",
+      "full_tokens": 275,
+      "prompt_tokens": 263,
+      "answer_tokens": 12,
+      "clipped_tokens": 275,
+      "prompt_exceeds_limit": false
+    },
+    {
+      "id": "0001-0001-0004",
+      "full_tokens": 277,
+      "prompt_tokens": 265,
+      "answer_tokens": 12,
+      "clipped_tokens": 277,
+      "prompt_exceeds_limit": false
+    },
+    {
+      "id": "0001-0001-0005",
+      "full_tokens": 275,
+      "prompt_tokens": 263,
+      "answer_tokens": 12,
+      "clipped_tokens": 275,
+      "prompt_exceeds_limit": false
+    }
+  ]
+}
