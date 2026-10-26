@@ -64,6 +64,13 @@ def main() -> None:
     parser.add_argument("--telemetry-every", type=int, default=10, help="Telemetry interval in optimizer steps.")
     parser.add_argument("--logging-dir", type=Path, default=None, help="Optional per-run logging directory.")
     parser.add_argument("--no-4bit", action="store_true", help="Debug fallback; not the QLoRA research condition.")
+    parser.add_argument("--per-device-train-batch-size", type=int, default=None, help="Optional throughput override for a speed pilot.")
+    parser.add_argument("--per-device-eval-batch-size", type=int, default=None, help="Optional evaluation batch-size override.")
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=None, help="Optional effective-batch override.")
+    parser.add_argument("--no-gradient-checkpointing", action="store_true", help="Disable activation checkpointing for a speed/memory pilot.")
+    parser.add_argument("--dataloader-num-workers", type=int, default=None, help="Optional DataLoader worker count.")
+    parser.add_argument("--tf32", action="store_true", help="Allow TF32 matrix multiplication on supported NVIDIA GPUs.")
+    parser.add_argument("--resume-from-checkpoint", type=Path, default=None, help="Resume Trainer/optimizer state from a checkpoint directory.")
     args = parser.parse_args()
     cfg = _load_config(args.config)
 
@@ -133,7 +140,8 @@ def main() -> None:
     if use_4bit:
         model = prepare_model_for_kbit_training(model)
     model.config.use_cache = False
-    if bool(train_cfg.get("gradient_checkpointing", True)):
+    use_gradient_checkpointing = bool(train_cfg.get("gradient_checkpointing", True)) and not args.no_gradient_checkpointing
+    if use_gradient_checkpointing:
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
 
@@ -158,9 +166,9 @@ def main() -> None:
     max_steps = args.max_steps if args.max_steps > 0 else -1
     kwargs = dict(
         output_dir=str(output_dir),
-        per_device_train_batch_size=int(train_cfg["per_device_train_batch_size"]),
-        per_device_eval_batch_size=int(train_cfg["per_device_eval_batch_size"]),
-        gradient_accumulation_steps=int(train_cfg["gradient_accumulation_steps"]),
+        per_device_train_batch_size=int(args.per_device_train_batch_size or train_cfg["per_device_train_batch_size"]),
+        per_device_eval_batch_size=int(args.per_device_eval_batch_size or train_cfg["per_device_eval_batch_size"]),
+        gradient_accumulation_steps=int(args.gradient_accumulation_steps or train_cfg["gradient_accumulation_steps"]),
         learning_rate=float(train_cfg["learning_rate"]),
         num_train_epochs=float(train_cfg["num_train_epochs"]),
         warmup_ratio=float(train_cfg["warmup_ratio"]),
@@ -174,6 +182,8 @@ def main() -> None:
         seed=int(args.seed if args.seed is not None else cfg["seed_list"][0]),
         fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
+        dataloader_num_workers=int(args.dataloader_num_workers) if args.dataloader_num_workers is not None else 0,
+        tf32=bool(args.tf32),
     )
     training_args = _training_args(kwargs, has_eval="validation" in tokenized)
     trainer = Trainer(
@@ -192,7 +202,10 @@ def main() -> None:
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
     started = time.perf_counter()
-    train_output = trainer.train()
+    resume_checkpoint = args.resume_from_checkpoint
+    if resume_checkpoint is not None and not resume_checkpoint.is_absolute():
+        resume_checkpoint = ROOT / resume_checkpoint
+    train_output = trainer.train(resume_from_checkpoint=str(resume_checkpoint) if resume_checkpoint else None)
     elapsed = time.perf_counter() - started
     trainer.save_model(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))

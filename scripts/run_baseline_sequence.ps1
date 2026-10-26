@@ -23,6 +23,17 @@ $runs = @(
     @{ Name = 'qwen_seed73'; Config = 'configs\baseline_qlora_vi.yaml'; Output = 'checkpoints\baseline_qwen_seed73' }
 )
 
+# Throughput configuration for the 8 GB RTX 3070 Ti.  batch 4 x accumulation 2
+# preserves the original effective batch size (8) while removing activation
+# checkpointing overhead.  Use the same settings for every baseline so the
+# comparison remains fair.
+$speedArgs = @(
+    '--per-device-train-batch-size', '4',
+    '--gradient-accumulation-steps', '2',
+    '--no-gradient-checkpointing',
+    '--tf32'
+)
+
 foreach ($run in $runs) {
     $metrics = Join-Path $run.Output 'run_metrics.json'
     if (Test-Path $metrics) {
@@ -33,16 +44,26 @@ foreach ($run in $runs) {
     $logDir = "logs\$($run.Name)"
     $stdoutLog = "$logDir\stdout.log"
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+    $checkpoint = Get-ChildItem -Path $run.Output -Directory -Filter 'checkpoint-*' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '^checkpoint-\d+$' } |
+        Sort-Object { [int]($_.Name -replace '^checkpoint-', '') } -Descending |
+        Select-Object -First 1
+    $commandArgs = @(
+        '--config', $run.Config,
+        '--train-file', 'data\splits\grouped_holdout\train.jsonl',
+        '--eval-file', 'data\splits\grouped_holdout\dev.jsonl',
+        '--output-dir', $run.Output,
+        '--seed', ([int]($run.Name -replace '.*seed', '')),
+        '--eval-steps', '1000',
+        '--save-steps', '250',
+        '--logging-dir', $logDir
+    ) + $speedArgs
+    if ($null -ne $checkpoint) {
+        Write-Host "Resuming $($run.Name) from $($checkpoint.FullName)"
+        $commandArgs += @('--resume-from-checkpoint', $checkpoint.FullName)
+    }
     Write-Host "Starting $($run.Name)"
-    & python code\train_qlora_baseline.py `
-        --config $run.Config `
-        --train-file data\splits\grouped_holdout\train.jsonl `
-        --eval-file data\splits\grouped_holdout\dev.jsonl `
-        --output-dir $run.Output `
-        --seed ([int]($run.Name -replace '.*seed', '')) `
-        --eval-steps 1000 `
-        --save-steps 250 `
-        --logging-dir $logDir 2>&1 | Tee-Object -FilePath $stdoutLog
+    & python code\train_qlora_baseline.py @commandArgs 2>&1 | Tee-Object -FilePath $stdoutLog
     if ($LASTEXITCODE -ne 0) {
         throw "Training failed for $($run.Name) with exit code $LASTEXITCODE"
     }

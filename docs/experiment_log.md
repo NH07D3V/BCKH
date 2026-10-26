@@ -41,3 +41,18 @@
 - Baseline supervisor: `scripts/run_baseline_sequence.ps1`, process ID `23476`; waits for the current run and then trains Sailor2 seeds 37/73 and Qwen control seeds 13/37/73 sequentially.
 - Evaluation supervisor: `scripts/run_evaluation_sequence.ps1`, process ID `936`; waits for all six baseline `run_metrics.json` files, then generates grouped-dev predictions and metrics.
 - Telemetry supervisor: `scripts/run_telemetry_pilot.ps1`, process ID `16108`; waits for all baseline dev metrics, then runs six 200-step telemetry pilots with fixed seeds and JSONL gradient logs.
+
+## 2026-10-26 — Throughput pilot
+
+- The previous Sailor2 seed 13 process stopped after step 418; `checkpoint-250` remains valid and resumable.
+- Added explicit speed-pilot overrides to `code/train_qlora_baseline.py` and resume support.
+- Batch 2 / accumulation 4: `2.90s/step`, peak reserved VRAM `4.40 GiB`.
+- Batch 4 / accumulation 2: `2.44s/step`, peak reserved VRAM `6.85 GiB`, no OOM.
+- Selected batch 4 / accumulation 2 with gradient checkpointing disabled and TF32 enabled. Effective batch remains 8, so the baseline comparison stays matched while throughput improves.
+- `scripts/run_baseline_sequence.ps1` now applies the same settings to every baseline and resumes the newest checkpoint when present.
+
+## 2026-10-26 — Accelerated main run resumed
+
+- Resumed Sailor2 seed 13 from `checkpoints/baseline_sailor2_seed13/checkpoint-250` with the selected throughput configuration.
+- Current process: `26296`; baseline supervisor: `8472`; evaluation supervisor: `3484`; telemetry supervisor: `11892`.
+- At the first live check, GPU utilization was `98%` and VRAM was approximately `7.9 / 8.0 GiB`; no OOM observed.
