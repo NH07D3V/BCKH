@@ -1,0 +1,92 @@
+{
+  "runs": [
+    {
+      "model": "Sailor2-1B-Chat",
+      "run": "sailor2_seed13",
+      "seed": 13,
+      "exact_match": 0.3342637822749477,
+      "f1": 0.42567186366143384,
+      "eval_count": 2866,
+      "train_loss": 1.2607370149135406,
+      "wall_clock_seconds": 6976.6354531,
+      "peak_cuda_memory_allocated_bytes": 5991814144,
+      "peak_cuda_memory_reserved_bytes": 9753853952
+    },
+    {
+      "model": "Sailor2-1B-Chat",
+      "run": "sailor2_seed37",
+      "seed": 37,
+      "exact_match": 0.3415910676901605,
+      "f1": 0.43876855966056955,
+      "eval_count": 2866,
+      "train_loss": 1.3092293146003666,
+      "wall_clock_seconds": 6549.096584199999,
+      "peak_cuda_memory_allocated_bytes": 5992338432,
+      "peak_cuda_memory_reserved_bytes": 6853492736
+    },
+    {
+      "model": "Sailor2-1B-Chat",
+      "run": "sailor2_seed73",
+      "seed": 73,
+      "exact_match": 0.340195394277739,
+      "f1": 0.4404412150823587,
+      "eval_count": 2866,
+      "train_loss": 1.3095538331288286,
+      "wall_clock_seconds": 8608.3979378,
+      "peak_cuda_memory_allocated_bytes": 5991814144,
+      "peak_cuda_memory_reserved_bytes": 10282336256
+    },
+    {
+      "model": "Qwen2.5-0.5B-Instruct",
+      "run": "qwen_seed13",
+      "seed": 13,
+      "exact_match": 0.3192602930914166,
+      "f1": 0.37221000930909576,
+      "eval_count": 2866,
+      "train_loss": 1.9950419430334383,
+      "wall_clock_seconds": 3463.3698398000015,
+      "peak_cuda_memory_allocated_bytes": 5014918144,
+      "peak_cuda_memory_reserved_bytes": 5867831296
+    },
+    {
+      "model": "Qwen2.5-0.5B-Instruct",
+      "run": "qwen_seed37",
+      "seed": 37,
+      "exact_match": 0.3217027215631542,
+      "f1": 0.37012595834828443,
+      "eval_count": 2866,
+      "train_loss": 1.994553147801052,
+      "wall_clock_seconds": 3627.910824399998,
+      "peak_cuda_memory_allocated_bytes": 5014918144,
+      "peak_cuda_memory_reserved_bytes": 5867831296
+    },
+    {
+      "model": "Qwen2.5-0.5B-Instruct",
+      "run": "qwen_seed73",
+      "seed": 73,
+      "exact_match": 0.319609211444522,
+      "f1": 0.36996226147151295,
+      "eval_count": 2866,
+      "train_loss": 1.9953163232356257,
+      "wall_clock_seconds": 3651.6523646999995,
+      "peak_cuda_memory_allocated_bytes": 5015966720,
+      "peak_cuda_memory_reserved_bytes": 9252634624
+    }
+  ],
+  "groups": {
+    "Qwen2.5-0.5B-Instruct": {
+      "n": 3,
+      "exact_match_mean": 0.32019074203303094,
+      "exact_match_sd": 0.0013209835649686517,
+      "f1_mean": 0.3707660763762977,
+      "f1_sd": 0.001253158370949279
+    },
+    "Sailor2-1B-Chat": {
+      "n": 3,
+      "exact_match_mean": 0.3386834147476157,
+      "exact_match_sd": 0.0038906091378640767,
+      "f1_mean": 0.43496054613478735,
+      "f1_sd": 0.008087593004602713
+    }
+  }
+}

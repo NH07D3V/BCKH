@@ -64,6 +64,10 @@ def main() -> None:
         memory = row["peak_cuda_memory_allocated_bytes"]
         memory_gib = memory / (1024 ** 3) if memory is not None else None
         lines.append(f"| {row['model']} | {row['run']} | {row['seed']} | {row['exact_match']:.4f} | {row['f1']:.4f} | {row['train_loss']} | {row['wall_clock_seconds']} | {memory_gib:.2f} |" if memory_gib is not None else f"| {row['model']} | {row['run']} | {row['seed']} | {row['exact_match']:.4f} | {row['f1']:.4f} | {row['train_loss']} | {row['wall_clock_seconds']} | TBD |")
+    lines.extend([
+        "",
+        "*Sailor2 seed 13 was resumed from checkpoint-250: runtime and train loss cover steps 250-2,837 only. EM/F1 and final eval loss are computed on the full grouped dev.*",
+    ])
     (ROOT / "paper" / "baseline_results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
