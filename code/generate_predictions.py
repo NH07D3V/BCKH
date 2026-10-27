@@ -97,6 +97,9 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(str(tokenizer_dir), local_files_only=True, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    # Causal language models must use left padding during batched generation;
+    # right padding can make shorter prompts generate from a padding token.
+    tokenizer.padding_side = "left"
     use_4bit = not args.no_4bit
     if use_4bit and not torch.cuda.is_available():
         raise RuntimeError("4-bit generation requires CUDA; use --no-4bit only for a debug run.")
