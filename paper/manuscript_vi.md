@@ -61,9 +61,11 @@ Chất lượng gồm Exact Match và token-level F1. Độ ổn định gồm m
 
 ## 5. Telemetry và predictor
 
-Telemetry pilot ghi gradient norm, update norm và update-to-weight ratio của các tham số LoRA tại các checkpoint định kỳ bằng [`code/gradient_telemetry.py`](../code/gradient_telemetry.py). Các feature dự kiến gồm residual energy, gradient noise proxy, signed/absolute alignment và effective rank. Predictor được fit trên train/calibration, đánh giá ngoài mẫu trên seed hoặc model đã hold out. Loss-only, gradient-only và residual-only là các control bắt buộc.
+Telemetry pilot ghi gradient norm **trước clip**, update norm, parameter norm và update-to-weight ratio của từng module LoRA tại các mốc định kỳ bằng [`code/gradient_telemetry.py`](../code/gradient_telemetry.py). Sampling chạy trong `on_optimizer_step` (vì Trainer gọi `model.zero_grad()` trước `on_step_end`) và norm thô được thu bằng `register_post_accumulate_grad_hook`, nên không bị `max_grad_norm` ép phẳng.
 
-QGA-P chỉ được gọi là policy khi có định nghĩa rõ, pseudocode, ablation và kết quả vượt uniform dưới matched budget. Nếu điều kiện không đạt, phần này sẽ báo cáo predictor thất bại hoặc stability map.
+Vòng này chỉ dùng các đại lượng đo được: mức gradient, độ biến thiên trong run, độ dốc, update-to-weight ratio và hình học module (depth, loại module). Các feature giàu thông tin hơn như residual energy, gradient noise proxy, signed/absolute alignment và effective rank **chưa được thu**, nên không xuất hiện trong kết quả. Predictor được fit trên seed 13+37 và đánh giá ngoài mẫu trên seed 73, sau đó chuyển Sailor2↔Qwen; loss-only và shape-only là control bắt buộc.
+
+QGA-P chỉ được gọi là policy khi có định nghĩa rõ, pseudocode, ablation và kết quả vượt uniform dưới matched budget. Nếu điều kiện không đạt, phần này báo cáo predictor thất bại hoặc stability map — đó là trường hợp của vòng này.
 
 ## 6. Kết quả
 
@@ -88,22 +90,66 @@ Theo nhóm, Sailor2 đạt EM `0.3387 ± 0.0039` và F1 `0.4350 ± 0.0081`, Qwen
 
 Sailor2 seed 13 được resume từ `checkpoint-250`, nên runtime và train loss của seed này chỉ tính cho bước 250–2.837; EM/F1 và val loss vẫn tính trên toàn bộ grouped dev. Toàn bộ sáu run dùng chung split, seed, ngân sách một epoch và recipe đã khóa trong [`docs/protocol_frozen.md`](../docs/protocol_frozen.md).
 
-### 6.3. Predictor và policy
+### 6.3. Bản đồ ổn định module
 
-| Feature set | Holdout split | Metric | Result |
-|---|---|---|---:|
-| Loss-only | `[TBD]` | `[TBD]` | `[TBD]` |
-| Gradient-only | `[TBD]` | `[TBD]` | `[TBD]` |
-| Residual-only | `[TBD]` | `[TBD]` | `[TBD]` |
-| Combined | `[TBD]` | `[TBD]` | `[TBD]` |
+Sáu pilot telemetry chạy 200 optimizer step trên 2.048 mẫu train, ghi 20 mốc mỗi run; mỗi record chứa gradient norm trước clip, update norm, parameter norm và update-to-weight ratio cho từng module LoRA (336 module ở Sailor2, 168 ở Qwen). Không record nào rỗng.
+
+Thứ hạng gradient norm theo module gần như trùng nhau giữa ba seed: Spearman `0.981–0.986` (Sailor2) và `0.983–0.986` (Qwen). Nói cách khác, "module nào nhận gradient lớn" là thuộc tính ổn định của kiến trúc, không phải dao động ngẫu nhiên của seed.
+
+| Module kind | Sailor2 \|g\| mean | Sailor2 risk | Qwen \|g\| mean | Qwen risk |
+|---|---:|---:|---:|---:|
+| `gate_proj` | 0.1137 | 0.760 | 0.1795 | 0.796 |
+| `up_proj` | 0.1119 | 0.665 | 0.1588 | 0.678 |
+| `down_proj` | 0.0530 | 0.546 | 0.0693 | 0.514 |
+| `o_proj` | 0.0535 | 0.424 | 0.0665 | 0.383 |
+| `v_proj` | 0.0678 | 0.407 | 0.0779 | 0.360 |
+| `q_proj` | 0.0221 | 0.364 | 0.0323 | 0.390 |
+| `k_proj` | 0.0230 | 0.335 | 0.0356 | 0.379 |
+
+MLP `gate/up` nhận gradient lớn hơn attention `q/k` khoảng 3–5 lần trên cả hai kiến trúc, và thứ tự này giữ nguyên khi chuyển model. Trong suốt pilot, train loss giảm đơn điệu (Sailor2 `2.12 → 1.18`, Qwen `2.78 → 1.94`) và không có loss spike. Sự kiện bất thường duy nhất là một cú tăng gradient `1.77 → 4.65 → 1.80` ở Sailor2 seed 73 tại step 180, lan ra 195/336 module, tức là do một batch khó chứ không phải một module mất ổn định.
+
+Bảng đầy đủ theo 336/168 module, gồm volatility trong run, spread giữa seed và risk score, ở [`docs/telemetry_analysis.md`](../docs/telemetry_analysis.md).
+
+### 6.4. Predictor QGA-P
+
+Protocol và ngưỡng được khóa trước khi đọc dữ liệu ([`docs/gate2_protocol.md`](../docs/gate2_protocol.md)). Feature lấy từ step 10–50, nhãn lấy từ step 160–200; ridge regression, Spearman ρ out-of-sample, bootstrap 2.000 lần và permutation 2.000 lần; train seed 13+37, hold out seed 73.
+
+| Split | Nhãn | F_grad | F_update | F_shape | F_full |
+|---|---|---:|---:|---:|---:|
+| Sailor2 seed 73 | `late_update_ratio` | 0.545 | 0.891 | 0.917 | 0.939 |
+| Sailor2 seed 73 | `late_grad_cv` | −0.043 | 0.196 | 0.623 | 0.561 |
+| Qwen seed 73 | `late_update_ratio` | 0.390 | 0.887 | 0.930 | 0.958 |
+| Qwen seed 73 | `late_grad_cv` | 0.316 | 0.635 | 0.617 | 0.640 |
+| Qwen → Sailor2 | `late_update_ratio` | 0.447 | 0.890 | 0.919 | 0.908 |
+| Qwen → Sailor2 | `late_grad_cv` | 0.128 | 0.236 | 0.399 | 0.225 |
+| Sailor2 → Qwen | `late_update_ratio` | 0.389 | 0.878 | 0.935 | 0.922 |
+| Sailor2 → Qwen | `late_grad_cv` | 0.075 | 0.466 | 0.298 | 0.270 |
+
+Kết quả trông tốt ở nhãn chính, nhưng hai kiểm tra cho thấy đó là hiệu ứng cấu trúc:
+
+1. **Phân rã phương sai.** `late_update_ratio` có 99.5% (Sailor2) và 99.6% (Qwen) phương sai nằm giữa các module, chỉ 0.4–0.5% nằm giữa các seed. Nhãn gần như là hằng số hình học, nên `F_shape` (depth + loại module) đã đạt ρ ≈ 0.92–0.94 mà không dùng bất kỳ tín hiệu động học nào. Điều này khớp với Adam: độ lớn cập nhật tỉ lệ với `lr·√n/‖w‖`, một đại lượng hình học.
+2. **Nhãn phần lệch riêng của seed** (exploratory): lấy `late − trung bình hai seed còn lại` cho từng module rồi dự đoán phần lệch đó. ρ nằm trong `[−0.10; 0.13]` cho mọi feature set trên cả hai model — không có tín hiệu.
+
+Theo điều khoản giá trị bổ sung của protocol (Δρ ≥ 0.05 so với control tốt nhất), `F_full` không đạt: Δρ lần lượt `+0.028, +0.021, −0.011, −0.013`. Vì vậy kết quả này **không** được gọi là predictor rủi ro dựa trên gradient; nó là **stability audit** kèm **negative result** cho giả thuyết telemetry warm-up dự đoán phần bất ổn riêng của seed ở ngân sách 200 step / 2.048 mẫu. Chi tiết và artifact ở [`docs/gate2_results.md`](../docs/gate2_results.md).
 
 ## 7. Phân tích lỗi và giới hạn
 
 Các giới hạn cần báo cáo gồm: dataset QA trích xuất đơn, kích thước model nhỏ, hai model cùng lineage, tỷ lệ prompt+kèm answer vượt 512 token khoảng 3,9% trên grouped train, chi phí đo telemetry, chất lượng parser và khả năng kết quả thay đổi khi dùng model family độc lập. Không dùng calibration metric hoặc smoke test để claim SOTA.
 
+Riêng kết quả Gate 2 có bốn giới hạn quyết định phạm vi claim:
+
+- Pilot chỉ chạy 200 step trên 2.048 mẫu, tức khoảng 7% của một epoch; vùng huấn luyện có loss giảm đơn điệu nên **không có sự kiện bất ổn định** để dự đoán. Kết quả âm chỉ đúng cho ngân sách này.
+- Nhãn `late_update_ratio` gần như là hằng số hình học (99,5% phương sai giữa module). Một phần "thành công" của protocol là do chọn nhãn chưa đủ động học; điều này đã được ghi nhận thay vì che đi.
+- Telemetry chưa có residual energy, gradient cosine hay effective rank, nên chưa loại trừ được khả năng các feature đó mang tín hiệu mà norm không có.
+- Chuyển model chỉ kiểm tra hai kiến trúc cùng lineage (Qwen2.5 và Sailor2 đều dựa trên Qwen2), nên "transfer" ở đây chưa phải bằng chứng cross-family.
+
+Held-out test vẫn chưa mở; mọi kết quả trong §6 là trên grouped dev.
+
 ## 8. Kết luận
 
-Kết luận sẽ được viết sau khi baseline multi-seed và predictor holdout hoàn tất. Claim cuối phải trả lời trực tiếp RQ1–RQ4, nêu rõ điều kiện mà tín hiệu có hoặc không có giá trị, và không gọi QGA-P là optimizer mới nếu policy không thắng các baseline dưới matched budget.
+Baseline QLoRA 1 epoch đã hoàn tất trên hai model và ba seed với spread giữa seed nhỏ (SD EM ≤ 0,004), nên khác biệt giữa Sailor2 và Qwen lớn hơn nhiễu seed. Telemetry cho thấy thứ hạng rủi ro theo module là thuộc tính kiến trúc, tái lập gần như hoàn hảo giữa seed (ρ ≥ 0,98), với MLP `gate/up` cao hơn attention `q/k` 3–5 lần.
+
+Predictor QGA-P **không** vượt được control hình học: khi tách phần lệch riêng của seed, telemetry warm-up không dự đoán được gì (|ρ| ≤ 0,13). Vì vậy bài không mở nhánh QGA-R/QGA-S và không gọi QGA-P là method; đóng góp được báo cáo là stability audit có kiểm soát cùng negative result cho giả thuyết predictor gradient ở ngân sách nhỏ. Claim cuối cùng vẫn chờ held-out test và sẽ trả lời trực tiếp RQ1–RQ4.
 
 ## Phụ lục tái lập
 

@@ -106,3 +106,15 @@ All six baseline runs finished one full epoch (2,837 optimizer steps) on the gro
 - Measured with the same 20-step Sailor2 smoke config: `35.0s` train runtime (`1.75s/step`) versus `16s/step` for the synchronising version, still 336 modules per record and pre-clip totals (`1.0126, 0.9837, 0.9034, 0.9289`).
 - Added `code/analyze_telemetry.py`, which reads the pilot JSONL files and emits a per-module risk table (JSON plus `docs/telemetry_analysis.md`). It reports run quality, per-module gradient level/volatility, cross-seed spread, update-to-weight ratio, module-kind and depth aggregates, and a composite percentile rank used only for ordering.
 
+## 2026-10-31 — Telemetry pilots complete, Gate 2 reports a negative result
+
+- All six pilots finished: 20 records per run, 336 modules per record for Sailor2 and 168 for Qwen, no empty records, no OOM. GPU back to idle afterwards.
+- Module ordering by gradient norm is nearly identical across seeds: Spearman `0.981–0.986` (Sailor2) and `0.983–0.986` (Qwen). MLP `gate/up` receives 3–5× the attention `q/k` gradient on both models.
+- Training was stable: loss fell monotonically in every run (Sailor2 `2.12 → 1.18`, Qwen `2.78 → 1.94`), zero loss spikes at robust z > 3.5. The only anomaly is a batch-level gradient jump at step 180 of Sailor2 seed 73 (`1.77 → 4.65 → 1.80`, 195/336 modules), which recovers on the next record.
+- Gate 2 was run exactly as frozen in `docs/gate2_protocol.md`. On the primary label `late_update_ratio` the predictor reaches ρ `0.939` (Sailor2 seed 73) and `0.958` (Qwen seed 73), with transfer ρ `0.908` and `0.922`, all CI lower bounds > 0 and p ≤ 0.0005.
+- The pass does not survive the controls: `F_shape` alone (depth + module kind) scores ρ `0.917` / `0.930` / `0.919` / `0.935`, and `F_full` improves on it by only `+0.028 / +0.021 / −0.011 / −0.013`, below the pre-registered 0.05 margin.
+- Exploratory checks recorded as such: `late_update_ratio` has 99.5% (Sailor2) and 99.6% (Qwen) of its variance *between* modules, so it is essentially a geometric constant; and a seed-residual label (`late − mean of the other two seeds`) is unpredictable from warm-up telemetry, with ρ in `[−0.10, 0.13]` for every feature set and both models.
+- `late_grad_cv` is more dynamic but does not transfer: p = 0.064 and 0.075 > 0.01.
+- Decision: do not open QGA-R/QGA-S on this evidence. Report the work as a stability audit plus a negative result for gradient-telemetry risk prediction at a 200-step / 2,048-sample budget, as allowed by `docs/roadmap_qga_lora_vi.md` §7.
+- Artifacts: `results/telemetry_analysis.json`, `docs/telemetry_analysis.md`, `results/gate2_predictor.json`, `docs/gate2_results.md`.
+

@@ -1,0 +1,937 @@
+{
+  "protocol": "docs/gate2_protocol.md",
+  "seed": 20261031,
+  "bootstrap": 2000,
+  "permutations": 2000,
+  "audit": {
+    "qwen_seed13": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 168,
+      "modules_used": 168,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    },
+    "qwen_seed37": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 168,
+      "modules_used": 168,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    },
+    "qwen_seed73": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 168,
+      "modules_used": 168,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    },
+    "sailor2_seed13": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 336,
+      "modules_used": 336,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    },
+    "sailor2_seed37": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 336,
+      "modules_used": 336,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    },
+    "sailor2_seed73": {
+      "records": 20,
+      "steps": [
+        10,
+        200
+      ],
+      "modules_total": 336,
+      "modules_used": 336,
+      "modules_dropped": 0,
+      "empty_records": 0,
+      "parameter_elements_per_module": 8192
+    }
+  },
+  "feature_sets": {
+    "F_const": [],
+    "F_loss": [
+      "run_loss"
+    ],
+    "F_grad": [
+      "grad_mean_log",
+      "grad_cv",
+      "grad_slope"
+    ],
+    "F_update": [
+      "update_ratio_mean",
+      "update_ratio_max",
+      "update_ratio_slope"
+    ],
+    "F_shape": [
+      "depth_norm",
+      "kind_q_proj",
+      "kind_k_proj",
+      "kind_v_proj",
+      "kind_o_proj",
+      "kind_gate_proj",
+      "kind_up_proj",
+      "kind_down_proj"
+    ],
+    "F_full": [
+      "grad_mean_log",
+      "grad_cv",
+      "grad_slope",
+      "update_ratio_mean",
+      "update_ratio_max",
+      "update_ratio_slope",
+      "param_norm_log",
+      "depth_norm",
+      "kind_q_proj",
+      "kind_k_proj",
+      "kind_v_proj",
+      "kind_o_proj",
+      "kind_gate_proj",
+      "kind_up_proj",
+      "kind_down_proj"
+    ]
+  },
+  "labels": [
+    "late_update_ratio",
+    "late_grad_cv"
+  ],
+  "splits": {
+    "qwen_seed73": {
+      "labels": {
+        "late_update_ratio": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.3901756925709022,
+            "ci_low": 0.23480744904482084,
+            "ci_high": 0.5186420795651895,
+            "p_permutation": 0.08595702148925537,
+            "alpha": 100.0,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.8865211251208489,
+            "ci_low": 0.8475432765156656,
+            "ci_high": 0.9117039023118483,
+            "p_permutation": 0.0009995002498750624,
+            "alpha": 0.1,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.9297887741001515,
+            "ci_low": 0.9063405670827968,
+            "ci_high": 0.9431912547445682,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.9582584619434,
+            "ci_low": 0.9396839890212966,
+            "ci_high": 0.9682501584066295,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        },
+        "late_grad_cv": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.31590749186327266,
+            "ci_low": 0.16440724148867483,
+            "ci_high": 0.4452224277333584,
+            "p_permutation": 0.049475262368815595,
+            "alpha": 100.0,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.6350519586355607,
+            "ci_low": 0.5219207614609992,
+            "ci_high": 0.7281669033743526,
+            "p_permutation": 0.01199400299850075,
+            "alpha": 0.1,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.617044862093227,
+            "ci_low": 0.4955487762177173,
+            "ci_high": 0.7180089652946848,
+            "p_permutation": 0.0024987506246876563,
+            "alpha": 1.0,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.6396859704091395,
+            "ci_low": 0.5202034128189122,
+            "ci_high": 0.7308746542931183,
+            "p_permutation": 0.001999000499750125,
+            "alpha": 100.0,
+            "n_train": 336,
+            "n_test": 168,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        }
+      },
+      "rows": {
+        "train": 336,
+        "test": 168
+      }
+    },
+    "sailor2_seed73": {
+      "labels": {
+        "late_update_ratio": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.5445062732121504,
+            "ci_low": 0.4668042493627107,
+            "ci_high": 0.6154090481778984,
+            "p_permutation": 0.01249375312343828,
+            "alpha": 100.0,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.8913133569119219,
+            "ci_low": 0.8685474180464795,
+            "ci_high": 0.9074828964554276,
+            "p_permutation": 0.0024987506246876563,
+            "alpha": 1.0,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.9174235857592072,
+            "ci_low": 0.8992467240095633,
+            "ci_high": 0.9301428433078778,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 10.0,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.9385867398910493,
+            "ci_low": 0.9237057747183741,
+            "ci_high": 0.9485972927649973,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        },
+        "late_grad_cv": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": -0.04317254338734475,
+            "ci_low": -0.15140435084291462,
+            "ci_high": 0.06697615656539133,
+            "p_permutation": 0.545727136431784,
+            "alpha": 100.0,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.195715994002012,
+            "ci_low": 0.0861114503656989,
+            "ci_high": 0.2933898358536656,
+            "p_permutation": 0.03298350824587706,
+            "alpha": 1.0,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.6234579539774633,
+            "ci_low": 0.5325949745814271,
+            "ci_high": 0.7020104111065918,
+            "p_permutation": 0.01199400299850075,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.5610908998880123,
+            "ci_low": 0.4711259946121854,
+            "ci_high": 0.6407931253007608,
+            "p_permutation": 0.004497751124437781,
+            "alpha": 0.01,
+            "n_train": 672,
+            "n_test": 336,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        }
+      },
+      "rows": {
+        "train": 672,
+        "test": 336
+      }
+    },
+    "qwen_to_sailor2": {
+      "labels": {
+        "late_update_ratio": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.44682650677406904,
+            "ci_low": 0.3966241117059011,
+            "ci_high": 0.4952190669468356,
+            "p_permutation": 0.10294852573713144,
+            "alpha": 100.0,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.8896595885060181,
+            "ci_low": 0.8774056575171172,
+            "ci_high": 0.8999051439666629,
+            "p_permutation": 0.004497751124437781,
+            "alpha": 1.0,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.9186327481335279,
+            "ci_low": 0.9079067928757588,
+            "ci_high": 0.9271257663772482,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 10.0,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.9082789696720623,
+            "ci_low": 0.8979076687550805,
+            "ci_high": 0.9167995176502736,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.1,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        },
+        "late_grad_cv": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.12841286369428814,
+            "ci_low": 0.06320532630634987,
+            "ci_high": 0.19221858688828156,
+            "p_permutation": 0.248375812093953,
+            "alpha": 100.0,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.2358360863731593,
+            "ci_low": 0.18024825911180484,
+            "ci_high": 0.2902262849908946,
+            "p_permutation": 0.0399800099950025,
+            "alpha": 0.01,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.3994076272035964,
+            "ci_low": 0.34769376273077757,
+            "ci_high": 0.4519430273789487,
+            "p_permutation": 0.01649175412293853,
+            "alpha": 0.1,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.2253034975380932,
+            "ci_low": 0.16625225954048867,
+            "ci_high": 0.2832964555237815,
+            "p_permutation": 0.063968015992004,
+            "alpha": 100.0,
+            "n_train": 504,
+            "n_test": 1008,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        }
+      },
+      "rows": {
+        "train": 504,
+        "test": 1008
+      }
+    },
+    "sailor2_to_qwen": {
+      "labels": {
+        "late_update_ratio": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.3886442776626428,
+            "ci_low": 0.3062328446757661,
+            "ci_high": 0.46576226946994215,
+            "p_permutation": 0.031984007996002,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.8775856881342781,
+            "ci_low": 0.8585814211200037,
+            "ci_high": 0.8929050868233879,
+            "p_permutation": 0.0034982508745627187,
+            "alpha": 0.1,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.9345168967407071,
+            "ci_low": 0.9225258288213333,
+            "ci_high": 0.9430143726557034,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.9224726136345531,
+            "ci_low": 0.9098452477692712,
+            "ci_high": 0.9317039510842737,
+            "p_permutation": 0.0004997501249375312,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        },
+        "late_grad_cv": {
+          "F_const": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": []
+          },
+          "F_loss": {
+            "rho": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "p_permutation": 1.0,
+            "alpha": 0.01,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "run_loss"
+            ]
+          },
+          "F_grad": {
+            "rho": 0.07452193955550059,
+            "ci_low": -0.01506707145848459,
+            "ci_high": 0.1592505188318277,
+            "p_permutation": 0.4127936031984008,
+            "alpha": 100.0,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope"
+            ]
+          },
+          "F_update": {
+            "rho": 0.4656746930018194,
+            "ci_low": 0.38414300374952365,
+            "ci_high": 0.5424328639596725,
+            "p_permutation": 0.035982008995502246,
+            "alpha": 1.0,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope"
+            ]
+          },
+          "F_shape": {
+            "rho": 0.29758272564439336,
+            "ci_low": 0.2103087529241708,
+            "ci_high": 0.37947209309613683,
+            "p_permutation": 0.10094952523738131,
+            "alpha": 100.0,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          },
+          "F_full": {
+            "rho": 0.2701156568369135,
+            "ci_low": 0.18860586757571235,
+            "ci_high": 0.35179293938218154,
+            "p_permutation": 0.07446276861569215,
+            "alpha": 1.0,
+            "n_train": 1008,
+            "n_test": 504,
+            "control_columns": [
+              "grad_mean_log",
+              "grad_cv",
+              "grad_slope",
+              "update_ratio_mean",
+              "update_ratio_max",
+              "update_ratio_slope",
+              "param_norm_log",
+              "depth_norm",
+              "kind_q_proj",
+              "kind_k_proj",
+              "kind_v_proj",
+              "kind_o_proj",
+              "kind_gate_proj",
+              "kind_up_proj",
+              "kind_down_proj"
+            ]
+          }
+        }
+      },
+      "rows": {
+        "train": 1008,
+        "test": 504
+      }
+    }
+  }
+}
