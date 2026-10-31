@@ -28,23 +28,29 @@ class GradientTelemetryCallback(TrainerCallback):
     records empty layers and a zero gradient norm. Right after
     ``optimizer.step()`` the accumulated gradients are still present and the
     update has just been applied, which is exactly the pair we want.
+
+    Norms are kept on the GPU as 0-dim tensors and only pulled to the host on
+    the steps that are written. Calling ``.item()`` inside the per-parameter
+    hook synchronises with the CUDA queue twice per micro-batch, which turned
+    a 2.4 s step into a 16 s step on the first attempt.
     """
 
     def __init__(self, output: Path, every_steps: int = 10) -> None:
         self.output = Path(output)
         self.every_steps = max(1, int(every_steps))
         self.previous: dict[str, torch.Tensor] = {}
-        self.grad_snapshot: dict[str, float] = {}
+        self.grad_snapshot: dict[str, torch.Tensor] = {}
         self.handles: list = []
+        self.capture_this_step = False
         self.output.parent.mkdir(parents=True, exist_ok=True)
 
     def _capture_grad(self, name: str, parameter: torch.nn.Parameter) -> None:
         # Runs at the end of every backward, before the trainer clips the
         # gradient, so the recorded norm is the raw accumulated value.
-        if parameter.grad is None:
+        if not self.capture_this_step or parameter.grad is None:
             return
-        self.grad_snapshot[name] = float(
-            torch.linalg.vector_norm(parameter.grad.detach().float()).item()
+        self.grad_snapshot[name] = torch.linalg.vector_norm(
+            parameter.grad.detach().float()
         )
 
     def on_train_begin(self, args, state, control, model=None, **kwargs):
@@ -53,7 +59,7 @@ class GradientTelemetryCallback(TrainerCallback):
         if model is None:
             return control
         self.previous = {
-            name: parameter.detach().float().cpu()
+            name: parameter.detach().float().clone()
             for name, parameter in model.named_parameters()
             if parameter.requires_grad
         }
@@ -70,6 +76,15 @@ class GradientTelemetryCallback(TrainerCallback):
             )
         return control
 
+    def on_step_begin(self, args, state, control, **kwargs):
+        # ``on_step_begin`` fires once per optimizer step, before the first
+        # micro-batch backward. ``global_step`` still counts completed steps.
+        upcoming = int(state.global_step) + 1
+        self.capture_this_step = upcoming % self.every_steps == 0
+        if self.capture_this_step:
+            self.grad_snapshot.clear()
+        return control
+
     def on_train_end(self, args, state, control, **kwargs):
         for handle in self.handles:
             handle.remove()
@@ -82,10 +97,11 @@ class GradientTelemetryCallback(TrainerCallback):
         step = int(state.global_step) + 1
         if step <= 0 or step % self.every_steps:
             return control
-        layer_stats: dict[str, dict[str, float]] = {}
-        total_grad_sq = 0.0
-        total_update_sq = 0.0
-        total_param_sq = 0.0
+        keys: list[str] = []
+        grad_norms: list[torch.Tensor] = []
+        update_norms: list[torch.Tensor] = []
+        param_norms: list[torch.Tensor] = []
+        counts: list[int] = []
         for name, parameter in model.named_parameters():
             if not parameter.requires_grad:
                 continue
@@ -93,34 +109,63 @@ class GradientTelemetryCallback(TrainerCallback):
             if grad_norm is None:
                 if parameter.grad is None:
                     continue
-                grad_norm = float(torch.linalg.vector_norm(parameter.grad.detach().float()).item())
-            current = parameter.detach().float().cpu()
-            param_norm = float(torch.linalg.vector_norm(current).item())
+                grad_norm = torch.linalg.vector_norm(parameter.grad.detach().float())
+            current = parameter.detach().float()
             previous = self.previous.get(name)
-            update_norm = float(torch.linalg.vector_norm(current - previous).item()) if previous is not None else 0.0
-            self.previous[name] = current
-            key = _layer_key(name)
-            bucket = layer_stats.setdefault(key, {"gradient_norm_sq": 0.0, "update_norm_sq": 0.0, "parameter_norm_sq": 0.0, "parameters": 0})
+            if previous is None:
+                update_norm = torch.zeros((), device=current.device, dtype=current.dtype)
+            else:
+                update_norm = torch.linalg.vector_norm(current - previous)
+            self.previous[name] = current.clone()
+            keys.append(_layer_key(name))
+            grad_norms.append(grad_norm)
+            update_norms.append(update_norm)
+            param_norms.append(torch.linalg.vector_norm(current))
+            counts.append(int(parameter.numel()))
+        if not keys:
+            return control
+        # One host transfer per column instead of one CUDA synchronisation per
+        # parameter: 336 .item() calls per record still serialise the queue.
+        columned = torch.stack(
+            [torch.stack(grad_norms), torch.stack(update_norms), torch.stack(param_norms)]
+        ).cpu().tolist()
+        gradient_values, update_values, parameter_values = columned
+        layer_stats: dict[str, dict[str, float]] = {}
+        total_grad_sq = 0.0
+        total_update_sq = 0.0
+        total_param_sq = 0.0
+        for key, grad_norm, update_norm, param_norm, count in zip(
+            keys, gradient_values, update_values, parameter_values, counts
+        ):
+            bucket = layer_stats.setdefault(
+                key,
+                {
+                    "gradient_norm_sq": 0.0,
+                    "update_norm_sq": 0.0,
+                    "parameter_norm_sq": 0.0,
+                    "parameters": 0,
+                },
+            )
             bucket["gradient_norm_sq"] += grad_norm * grad_norm
             bucket["update_norm_sq"] += update_norm * update_norm
             bucket["parameter_norm_sq"] += param_norm * param_norm
-            bucket["parameters"] += int(parameter.numel())
+            bucket["parameters"] += count
             total_grad_sq += grad_norm * grad_norm
             total_update_sq += update_norm * update_norm
             total_param_sq += param_norm * param_norm
-        if not layer_stats:
-            return control
         record = {
             "step": step,
             "total_gradient_norm": total_grad_sq ** 0.5,
             "total_update_norm": total_update_sq ** 0.5,
-            "update_to_weight_ratio": total_update_sq ** 0.5 / (total_param_sq ** 0.5 + 1e-12),
+            "update_to_weight_ratio": total_update_sq ** 0.5
+            / (total_param_sq ** 0.5 + 1e-12),
             "layers": {
                 key: {
                     "gradient_norm": value["gradient_norm_sq"] ** 0.5,
                     "update_norm": value["update_norm_sq"] ** 0.5,
                     "parameter_norm": value["parameter_norm_sq"] ** 0.5,
-                    "update_to_weight_ratio": value["update_norm_sq"] ** 0.5 / (value["parameter_norm_sq"] ** 0.5 + 1e-12),
+                    "update_to_weight_ratio": value["update_norm_sq"] ** 0.5
+                    / (value["parameter_norm_sq"] ** 0.5 + 1e-12),
                     "parameters": value["parameters"],
                 }
                 for key, value in layer_stats.items()

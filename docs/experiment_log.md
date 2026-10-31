@@ -96,3 +96,13 @@ All six baseline runs finished one full epoch (2,837 optimizer steps) on the gro
 - Smoke check (Sailor2, 20 steps, telemetry every 5): records now carry 336 module entries per step with non-zero per-module gradient and update norms, and total gradient norms differ from the clip threshold (`1.0150, 1.0077, 0.9111, 0.9401`).
 - The six invalid files were archived to `results/invalid_telemetry_v0/` and the stale `checkpoints/telemetry_*` adapters were deleted; the six pilots were re-run with the fixed collector.
 
+## 2026-10-31 — Telemetry collection overhead removed
+
+- The first re-run of the fixed collector took `16s/step` instead of `2.4s/step`: the per-parameter hook called `.item()`, which forces a CUDA synchronisation twice per micro-batch (336 LoRA tensors × 2 = 672 syncs per optimizer step).
+- Fix in `code/gradient_telemetry.py`:
+  - the hook now stores the 0-dim norm tensor and never touches the host;
+  - `on_step_begin` computes whether the upcoming step will be recorded, so hooks do nothing on non-sampled steps and the snapshot is cleared before each sampled step;
+  - the record loop stacks the three norm columns and performs a single host transfer instead of one `float()` per parameter.
+- Measured with the same 20-step Sailor2 smoke config: `35.0s` train runtime (`1.75s/step`) versus `16s/step` for the synchronising version, still 336 modules per record and pre-clip totals (`1.0126, 0.9837, 0.9034, 0.9289`).
+- Added `code/analyze_telemetry.py`, which reads the pilot JSONL files and emits a per-module risk table (JSON plus `docs/telemetry_analysis.md`). It reports run quality, per-module gradient level/volatility, cross-seed spread, update-to-weight ratio, module-kind and depth aggregates, and a composite percentile rank used only for ordering.
+
