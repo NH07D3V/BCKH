@@ -118,3 +118,11 @@ All six baseline runs finished one full epoch (2,837 optimizer steps) on the gro
 - Decision: do not open QGA-R/QGA-S on this evidence. Report the work as a stability audit plus a negative result for gradient-telemetry risk prediction at a 200-step / 2,048-sample budget, as allowed by `docs/roadmap_qga_lora_vi.md` Â§7.
 - Artifacts: `results/telemetry_analysis.json`, `docs/telemetry_analysis.md`, `results/gate2_predictor.json`, `docs/gate2_results.md`.
 
+
+## 2026-10-31 — Long telemetry pilot and Gate 2b protocol
+
+- The 200-step pilot had no instability events to predict, so `docs/gate2b_protocol.md` was locked before the new data existed: 1,000 steps on the full grouped train, warm-up at steps 10–100, monitoring at steps 110–1,000.
+- Instability label (frozen): a spike is a monitoring record with robust z = 4 relative to the warm-up median/MAD and a value = 2× that median; a module is unstable with spikes on at least three distinct records, which excludes single-batch transients like the step-180 event of the previous pilot.
+- The collector gained `gradient_cosine`: cosine between the current and the previous sampled gradient per module, weighted by gradient norm. Clipping is a uniform scaling, so the direction is still pre-clip. A smoke run showed `53.7 s` with telemetry versus `52.9 s` without it at 20 steps, i.e. about `0.04 s/step` overhead.
+- Added `code/analyze_instability.py` (event labels, prevalence, per-kind and per-depth rates, cross-seed Jaccard) and `code/fit_gate2b_predictor.py` (ridge linear probability, leave-one-seed-out alpha by AUROC, bootstrap CI, label permutation, Sailor2?Qwen transfer). Both were exercised on a synthetic three-seed fixture before the real data arrived.
+- `scripts/run_telemetry_long.ps1` runs the six pilots and skips any run whose JSONL already exists.

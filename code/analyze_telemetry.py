@@ -1,4 +1,4 @@
-"""Turn the LoRA telemetry pilots into a per-module risk table.
+﻿"""Turn the LoRA telemetry pilots into a per-module risk table.
 
 The pilots write one JSONL record per sampled optimizer step with per-module
 gradient/update/parameter norms. This script aggregates those records into:
@@ -23,7 +23,7 @@ from statistics import mean, median, pstdev
 
 ROOT = Path(__file__).resolve().parents[1]
 
-RUN_PATTERN = re.compile(r"telemetry_(?P<model>sailor2|qwen)[_-]?seed(?P<seed>\d+)", re.IGNORECASE)
+RUN_PATTERN = re.compile(r"telemetry(?:_long)?[_-](?P<model>sailor2|qwen)[_-]?seed(?P<seed>\d+)", re.IGNORECASE)
 MODEL_LABEL = {"sailor2": "Sailor2-1B-Chat", "qwen": "Qwen2.5-0.5B-Instruct"}
 LOSS_PATTERN = re.compile(r"\{'loss': '([0-9.eE+-]+)'")
 
@@ -388,15 +388,15 @@ def main() -> None:
     args.output_json.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 
     lines = ["# Telemetry analysis", ""]
-    lines.append("Sinh tự động bởi `code/analyze_telemetry.py`; chỉ đọc artifact, không chạy lại training.")
+    lines.append("Sinh tá»± Ä‘á»™ng bá»Ÿi `code/analyze_telemetry.py`; chá»‰ Ä‘á»c artifact, khÃ´ng cháº¡y láº¡i training.")
     lines.append("")
-    lines.append("## Chất lượng pilot")
+    lines.append("## Cháº¥t lÆ°á»£ng pilot")
     lines.append("")
     lines.append("| Run | Records | Empty | Steps | Modules | |g| mean | |g| max | update/weight mean | Loss spikes |")
     lines.append("|---|---:|---:|---|---:|---:|---:|---:|---:|")
     for name, run in sorted(report["runs"].items()):
         lines.append(
-            "| {name} | {records} | {empty} | {first}–{last} | {modules} | {gmean:.4f} | {gmax:.4f} | {ratio:.2e} | {spikes} ({rate:.1%}) |".format(
+            "| {name} | {records} | {empty} | {first}â€“{last} | {modules} | {gmean:.4f} | {gmax:.4f} | {ratio:.2e} | {spikes} ({rate:.1%}) |".format(
                 name=name,
                 records=run["records"],
                 empty=run["empty_records"],
@@ -416,7 +416,7 @@ def main() -> None:
         lines.append("")
         if summary["seed_agreement"]:
             agreement = ", ".join(
-                f"{pair['seeds'][0]}↔{pair['seeds'][1]}: ρ={pair['spearman_gradient_norm']:.3f}"
+                f"{pair['seeds'][0]}â†”{pair['seeds'][1]}: Ï={pair['spearman_gradient_norm']:.3f}"
                 for pair in summary["seed_agreement"]
             )
             lines.append(f"- Cross-seed rank agreement of module gradient norms: {agreement}.")
@@ -454,7 +454,7 @@ def main() -> None:
             lines.append("|---|---:|---:|---:|")
             for entry in summary["depth_summary"]:
                 lines.append(
-                    "| {start}–{end} | {modules} | {grad:.4f} | {risk:.3f} |".format(
+                    "| {start}â€“{end} | {modules} | {grad:.4f} | {risk:.3f} |".format(
                         start=entry["layers"][0],
                         end=entry["layers"][1],
                         modules=entry["modules"],
@@ -477,3 +477,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
