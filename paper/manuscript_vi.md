@@ -75,12 +75,18 @@ Gate 1 đã đạt: asset, split, parser, tokenization và calibration chạy đ
 
 | Model | Seed | EM | F1 | Val loss | Runtime | Peak VRAM |
 |---|---:|---:|---:|---:|---:|---:|
-| Sailor2-1B-Chat | 13 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
-| Sailor2-1B-Chat | 37 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
-| Sailor2-1B-Chat | 73 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
-| Qwen2.5-0.5B-Instruct | 13 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
-| Qwen2.5-0.5B-Instruct | 37 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
-| Qwen2.5-0.5B-Instruct | 73 | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` | `[TBD]` |
+| Sailor2-1B-Chat | 13 | 0.3343 | 0.4257 | 2.332 | 1h56m | 5.58 GiB |
+| Sailor2-1B-Chat | 37 | 0.3416 | 0.4388 | 2.342 | 1h49m | 5.58 GiB |
+| Sailor2-1B-Chat | 73 | 0.3402 | 0.4404 | 2.348 | 2h23m | 5.58 GiB |
+| Qwen2.5-0.5B-Instruct | 13 | 0.3193 | 0.3722 | 2.427 | 58m | 4.67 GiB |
+| Qwen2.5-0.5B-Instruct | 37 | 0.3217 | 0.3701 | 2.428 | 1h00m | 4.67 GiB |
+| Qwen2.5-0.5B-Instruct | 73 | 0.3196 | 0.3700 | 2.429 | 1h01m | 4.67 GiB |
+
+Bảng đầy đủ kèm train loss, wall-clock giây và bản gốc metric nằm ở [`paper/baseline_results.md`](baseline_results.md) và `results/baseline_summary.json`.
+
+Theo nhóm, Sailor2 đạt EM `0.3387 ± 0.0039` và F1 `0.4350 ± 0.0081`, Qwen đạt EM `0.3202 ± 0.0013` và F1 `0.3708 ± 0.0013` (mean ± SD trên ba seed). Sailor2 hơn Qwen khoảng `+1,8` điểm EM và `+6,4` điểm F1 với độ lệch chuẩn giữa seed nhỏ hơn một điểm phần trăm, nên khác biệt model lớn hơn nhiễu seed. Vì spread giữa seed nhỏ, phần predictor phải giải thích rủi ro **trong từng model** (layer/module nào bất ổn) chứ không thể dựa vào dao động chất lượng cuối.
+
+Sailor2 seed 13 được resume từ `checkpoint-250`, nên runtime và train loss của seed này chỉ tính cho bước 250–2.837; EM/F1 và val loss vẫn tính trên toàn bộ grouped dev. Toàn bộ sáu run dùng chung split, seed, ngân sách một epoch và recipe đã khóa trong [`docs/protocol_frozen.md`](../docs/protocol_frozen.md).
 
 ### 6.3. Predictor và policy
 

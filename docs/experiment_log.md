@@ -64,3 +64,35 @@
 - Train wall-clock: `6,976s` (~1h56m) with the accelerated batch/TF32 configuration.
 - Final adapter and `run_metrics.json` are in `checkpoints/baseline_sailor2_seed13`.
 - The original supervisor treated a harmless Windows CUDA warning on stderr as a failure before seed 37. The supervisor was hardened to use isolated stdout/stderr files and process exit codes; seed 37 was then restarted successfully.
+
+## 2026-10-27 — Multi-seed baseline complete (Gate 2 evidence)
+
+All six baseline runs finished one full epoch (2,837 optimizer steps) on the grouped holdout, and predictions/metrics were generated on the same 2,866-row grouped dev split.
+
+| Model | Seed | EM | F1 | Val loss | Train loss | Runtime (s) | Peak VRAM (GiB) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Sailor2-1B-Chat | 13 | 0.3343 | 0.4257 | 2.332 | 1.2607 | 6,976 | 5.58 |
+| Sailor2-1B-Chat | 37 | 0.3416 | 0.4388 | 2.342 | 1.3092 | 6,549 | 5.58 |
+| Sailor2-1B-Chat | 73 | 0.3402 | 0.4404 | 2.348 | 1.3096 | 8,608 | 5.58 |
+| Qwen2.5-0.5B-Instruct | 13 | 0.3193 | 0.3722 | 2.427 | 1.9950 | 3,463 | 4.67 |
+| Qwen2.5-0.5B-Instruct | 37 | 0.3217 | 0.3701 | 2.428 | 1.9946 | 3,628 | 4.67 |
+| Qwen2.5-0.5B-Instruct | 73 | 0.3196 | 0.3700 | 2.429 | 1.9953 | 3,652 | 4.67 |
+
+- Group means: Sailor2 EM `0.3387 ± 0.0039`, F1 `0.4350 ± 0.0081`; Qwen EM `0.3202 ± 0.0013`, F1 `0.3708 ± 0.0013`.
+- Between-seed spread is small for both models, so the per-layer telemetry has to explain within-model risk rather than a large end-task variance.
+- Sailor2 seed 13 was resumed from `checkpoint-250`; its runtime and train loss cover steps 250–2,837 while EM/F1/val loss cover the full grouped dev.
+- Artifacts: `results/baseline_summary.json`, `results/*_dev_metrics.json`, `paper/baseline_results.md`.
+
+## 2026-10-31 — Telemetry pilot v0 invalid, collector fixed
+
+- The six 200-step telemetry pilots ran, but every JSONL record was empty: `"layers": {}` and `"total_gradient_norm": 0.0`.
+- Root cause: `GradientTelemetryCallback` sampled in `on_step_end`, while `transformers` calls `model.zero_grad()` (trainer.py:1926) *before* firing that event (trainer.py:1929). Every `parameter.grad` was already `None`.
+- Second defect found while fixing: sampling after `optimizer.step()` yields gradients that have already been clipped to `max_grad_norm=1.0`, so the total norm was pinned at exactly `1.0` and lost its magnitude.
+- Fix in `code/gradient_telemetry.py`:
+  - sample in `on_optimizer_step`, where the accumulated gradients still exist and the update has just been applied;
+  - register `register_post_accumulate_grad_hook` on every trainable LoRA parameter to record the raw pre-clip per-module norm;
+  - seed the parameter reference at `on_train_begin` so the first record reports a real update delta;
+  - remove hooks in `on_train_end`.
+- Smoke check (Sailor2, 20 steps, telemetry every 5): records now carry 336 module entries per step with non-zero per-module gradient and update norms, and total gradient norms differ from the clip threshold (`1.0150, 1.0077, 0.9111, 0.9401`).
+- The six invalid files were archived to `results/invalid_telemetry_v0/` and the stale `checkpoints/telemetry_*` adapters were deleted; the six pilots were re-run with the fixed collector.
+
