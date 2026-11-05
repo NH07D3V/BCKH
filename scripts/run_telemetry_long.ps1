@@ -31,8 +31,17 @@ $runs = @(
 
 foreach ($run in $runs) {
     $telemetry = "results\telemetry_long_$($run.Name).jsonl"
+    $expectedRecords = 100
     if (Test-Path $telemetry) {
-        continue
+        $records = (Get-Content $telemetry | Measure-Object -Line).Lines
+        if ($records -ge $expectedRecords) {
+            continue
+        }
+        # A crash leaves a partial file behind; restarting that run is the only
+        # option because intermediate checkpoints are not written.
+        Write-Host "Discarding partial telemetry for $($run.Name): $records/$expectedRecords records"
+        Remove-Item $telemetry -Force
+        Remove-Item "checkpoints\telemetry_long_$($run.Name)" -Recurse -Force -ErrorAction SilentlyContinue
     }
     $output = "checkpoints\telemetry_long_$($run.Name)"
     $logDir = "logs\telemetry_long_$($run.Name)"
