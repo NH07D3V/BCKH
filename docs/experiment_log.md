@@ -126,3 +126,17 @@ All six baseline runs finished one full epoch (2,837 optimizer steps) on the gro
 - The collector gained `gradient_cosine`: cosine between the current and the previous sampled gradient per module, weighted by gradient norm. Clipping is a uniform scaling, so the direction is still pre-clip. A smoke run showed `53.7 s` with telemetry versus `52.9 s` without it at 20 steps, i.e. about `0.04 s/step` overhead.
 - Added `code/analyze_instability.py` (event labels, prevalence, per-kind and per-depth rates, cross-seed Jaccard) and `code/fit_gate2b_predictor.py` (ridge linear probability, leave-one-seed-out alpha by AUROC, bootstrap CI, label permutation, Sailor2?Qwen transfer). Both were exercised on a synthetic three-seed fixture before the real data arrived.
 - `scripts/run_telemetry_long.ps1` runs the six pilots and skips any run whose JSONL already exists.
+
+## 2026-11-05 — Long pilot complete, Gate 2b confirms the negative result
+
+- All six 1,000-step pilots finished with 100/100 records each (steps 10–1,000; warm-up 10–100, monitoring 110–1,000): Sailor2 files ~9.3 MB, Qwen ~4.6 MB. No empty record, no OOM, GPU idle afterwards.
+- The first attempt was killed by a server restart at ~step 500; `scripts/run_telemetry_long.ps1` now deletes partial JSONL files on start, so the six finished runs contain a contiguous 10–1,000 step history (commit `c98e30c`).
+- `code/analyze_instability.py` (labels frozen in `docs/gate2b_protocol.md`): prevalence 18.8 / 23.8 / 22.0% for Sailor2 seeds 13/37/73 and 11.3 / 11.3 / 10.7% for Qwen. Cross-seed Jaccard of the unstable sets is 0.59–0.71 (Sailor2) and 0.54–0.76 (Qwen).
+- Instability is architectural: `gate_proj` is 95.8% unstable in Sailor2 (46/48) and 70.8% in Qwen (17/24); `o_proj` and `v_proj` are 0% in both; rates fall from 38.1% in the first quarter of layers to 13.1% in the last (Sailor2). Counting over the three seeds, 49 Sailor2 modules are always unstable, 48 are mixed and 239 never; Qwen is 13 / 11 / 144.
+- No real loss spikes: the three Qwen "1/100" counts are the first logged loss, which is above the run median, not a mid-run event.
+- `code/fit_gate2b_predictor.py` ran in 27 s. In-model AUROC on seed 73: `F_shape` 0.952 / 0.944, `F_grad` 0.772 / 0.814, `F_update` 0.815 / 0.895, `F_cosine` 0.696 / 0.789, `F_full` 0.958 / 0.966 (Sailor2 / Qwen). Transfer: Qwen→Sailor2 `F_full` 0.881, Sailor2→Qwen 0.940.
+- Criteria 1–3 pass everywhere (AUROC ≥ 0.65, CI lower > 0.50, p < 0.01). Criterion 4 fails on all four splits: `F_full − F_shape` = `+0.005`, `+0.022`, `+0.030`, `+0.025`, below the locked 0.05 margin.
+- Exploratory only: a seed-specific label (unstable in seed 73, stable in 13 and 37) leaves 7/336 (Sailor2) and 2/168 (Qwen) positives; with that label `F_shape` drops to 0.637 / 0.483, consistent with the architectural explanation. Too few positives for any claim.
+- Decision: the 200-step negative result is confirmed at a 1,000-step budget. QGA-R/QGA-S stay closed; the paper reports a stability audit, a reproducible architectural risk map, and a negative result for warm-up gradient telemetry as a run-specific risk predictor.
+- `code/analyze_telemetry.py` now skips `*_long_*` files so the 200-step and 1,000-step (model, seed) keys never mix in the short-pilot tables.
+- Artifacts: `results/instability_analysis.json`, `docs/instability_analysis.md`, `results/gate2b_predictor.json`, `docs/gate2b_results.md`.

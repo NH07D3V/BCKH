@@ -132,15 +132,48 @@ Kết quả trông tốt ở nhãn chính, nhưng hai kiểm tra cho thấy đó
 
 Theo điều khoản giá trị bổ sung của protocol (Δρ ≥ 0.05 so với control tốt nhất), `F_full` không đạt: Δρ lần lượt `+0.028, +0.021, −0.011, −0.013`. Vì vậy kết quả này **không** được gọi là predictor rủi ro dựa trên gradient; nó là **stability audit** kèm **negative result** cho giả thuyết telemetry warm-up dự đoán phần bất ổn riêng của seed ở ngân sách 200 step / 2.048 mẫu. Chi tiết và artifact ở [`docs/gate2_results.md`](../docs/gate2_results.md).
 
+### 6.5. Pilot dài 1.000 step và Gate 2b
+
+Pilot 200 step không tạo ra sự kiện bất ổn định nào, nên một protocol thứ hai được khóa trước khi có dữ liệu ([`docs/gate2b_protocol.md`](../docs/gate2b_protocol.md)): 1.000 optimizer step trên toàn bộ grouped train, warm-up ở step 10–100 và monitoring ở step 110–1.000, mỗi run 100 record. Spike được định nghĩa là record có robust z ≥ 4 so với median/MAD của warm-up **và** giá trị ≥ 2× median đó; module bị coi là bất ổn định khi có spike trên ít nhất ba record khác nhau. Sáu run hoàn tất, không record rỗng, không OOM.
+
+Lần này có sự kiện thật. Tỉ lệ module bất ổn định là `18,8 / 23,8 / 22,0%` ở Sailor2 và `11,3 / 11,3 / 10,7%` ở Qwen (seed 13/37/73). Không run nào có loss spike thật; bộ đếm ban đầu báo một "loss spike" ở mỗi run Qwen, nhưng đó là loss của record đầu tiên chứ không phải sự kiện giữa chừng.
+
+| Kind | Sailor2 (n=48/kind) | Qwen (n=24/kind) |
+|---|---:|---:|
+| `gate_proj` | **95,8%** (46) | **70,8%** (17) |
+| `down_proj` | 47,9% (23) | 0,0% |
+| `k_proj` | 31,2% (15) | 8,3% (2) |
+| `q_proj` | 14,6% (7) | 12,5% (3) |
+| `up_proj` | 12,5% (6) | 8,3% (2) |
+| `o_proj` | 0,0% | 0,0% |
+| `v_proj` | 0,0% | 0,0% |
+
+Bất ổn định tập trung ở `gate_proj` và ở các layer đầu: 38,1% module ở dải đầu (layer 0–11) của Sailor2 bất ổn định, giảm còn 13,1% ở dải cuối (36–47); Qwen lặp lại xu hướng này (21,4% → 7,1%). Tập module bất ổn định cũng trùng nhau giữa seed (Jaccard `0,59–0,71` cho Sailor2, `0,54–0,76` cho Qwen). Phân loại theo cả ba seed: Sailor2 có 49 module luôn bất ổn định, 48 lúc có lúc không và 239 không bao giờ; Qwen là 13 / 11 / 144. Phần lớn rủi ro vì vậy là hằng số kiến trúc.
+
+Predictor được chạy đúng protocol (ridge linear probability, alpha chọn bằng leave-one-seed-out, bootstrap 2.000, permutation 2.000, train seed 13+37 và test seed 73):
+
+| Feature set | Sailor2 seed 73 | Qwen seed 73 | Qwen → Sailor2 | Sailor2 → Qwen |
+|---|---:|---:|---:|---:|
+| `F_shape` | 0,952 | 0,944 | 0,851 | 0,915 |
+| `F_grad` | 0,772 | 0,814 | 0,687 | 0,834 |
+| `F_update` | 0,815 | 0,895 | 0,788 | 0,863 |
+| `F_cosine` | 0,696 | 0,789 | 0,597 | 0,661 |
+| `F_full` | 0,958 | 0,966 | 0,881 | 0,940 |
+
+Ba tiêu chí đầu đều đạt: AUROC ≥ 0,65, cận dưới CI 95% > 0,50 (`0,935` và `0,905`) và p < 0,01 (`0,0005` và `0,0010`); transfer cũng ≥ 0,60. Nhưng tiêu chí giá trị bổ sung trượt ở cả bốn split: `F_full − F_shape` chỉ là `+0,005`, `+0,022`, `+0,030`, `+0,025`, dưới ngưỡng khóa `0,05`. Nói cách khác, biết depth và loại module đã đủ xếp hạng rủi ro; telemetry gradient thêm rất ít. Một kiểm tra exploratory với nhãn "bất ổn riêng của seed 73" (module bất ổn định ở seed 73 nhưng ổn định ở hai seed kia) chỉ còn 7/336 và 2/168 dương tính, quá ít để kết luận, và `F_shape` mất gần hết khả năng dự đoán — đúng như dự đoán nếu tín hiệu chủ yếu là kiến trúc.
+
+Vì vậy kết quả âm của Gate 2 được **xác nhận ở ngân sách 1.000 step**, không phải chỉ do pilot ngắn thiếu sự kiện. Chi tiết ở [`docs/gate2b_results.md`](../docs/gate2b_results.md) và [`docs/instability_analysis.md`](../docs/instability_analysis.md).
+
 ## 7. Phân tích lỗi và giới hạn
 
 Các giới hạn cần báo cáo gồm: dataset QA trích xuất đơn, kích thước model nhỏ, hai model cùng lineage, tỷ lệ prompt+kèm answer vượt 512 token khoảng 3,9% trên grouped train, chi phí đo telemetry, chất lượng parser và khả năng kết quả thay đổi khi dùng model family độc lập. Không dùng calibration metric hoặc smoke test để claim SOTA.
 
-Riêng kết quả Gate 2 có bốn giới hạn quyết định phạm vi claim:
+Riêng kết quả Gate 2/2b có năm giới hạn quyết định phạm vi claim:
 
-- Pilot chỉ chạy 200 step trên 2.048 mẫu, tức khoảng 7% của một epoch; vùng huấn luyện có loss giảm đơn điệu nên **không có sự kiện bất ổn định** để dự đoán. Kết quả âm chỉ đúng cho ngân sách này.
-- Nhãn `late_update_ratio` gần như là hằng số hình học (99,5% phương sai giữa module). Một phần "thành công" của protocol là do chọn nhãn chưa đủ động học; điều này đã được ghi nhận thay vì che đi.
-- Telemetry chưa có residual energy, gradient cosine hay effective rank, nên chưa loại trừ được khả năng các feature đó mang tín hiệu mà norm không có.
+- Pilot ngắn 200 step không có sự kiện bất ổn định để dự đoán, nên kết quả âm ban đầu chỉ đúng cho ngân sách đó. Pilot dài 1.000 step tạo ra sự kiện thật (10,7–23,8% module) nhưng vẫn cho cùng kết luận, nên phạm vi claim hiện là **ngân sách 1.000 step**, chưa phải toàn bộ một epoch.
+- Nhãn `late_update_ratio` của Gate 2 gần như là hằng số hình học (99,5% phương sai giữa module); nhãn sự kiện của Gate 2b thì bị `gate_proj` chi phối. Cả hai vòng đều cho thấy nhãn nghiêng về cấu trúc, và điều này được ghi nhận thay vì che đi.
+- Bất ổn định quan sát được chủ yếu là hằng số kiến trúc: chỉ 11–14% module là "mixed" giữa ba seed, nên chưa có đủ dương tính seed-specific để kiểm định một predictor theo run.
+- Telemetry chưa có residual energy, effective rank hay tín hiệu curvature; mới có norm, update ratio và cosine, nên chưa loại trừ được khả năng các feature đó mang tín hiệu mà norm không có.
 - Chuyển model chỉ kiểm tra hai kiến trúc cùng lineage (Qwen2.5 và Sailor2 đều dựa trên Qwen2), nên "transfer" ở đây chưa phải bằng chứng cross-family.
 
 Held-out test vẫn chưa mở; mọi kết quả trong §6 là trên grouped dev.
@@ -149,7 +182,7 @@ Held-out test vẫn chưa mở; mọi kết quả trong §6 là trên grouped de
 
 Baseline QLoRA 1 epoch đã hoàn tất trên hai model và ba seed với spread giữa seed nhỏ (SD EM ≤ 0,004), nên khác biệt giữa Sailor2 và Qwen lớn hơn nhiễu seed. Telemetry cho thấy thứ hạng rủi ro theo module là thuộc tính kiến trúc, tái lập gần như hoàn hảo giữa seed (ρ ≥ 0,98), với MLP `gate/up` cao hơn attention `q/k` 3–5 lần.
 
-Predictor QGA-P **không** vượt được control hình học: khi tách phần lệch riêng của seed, telemetry warm-up không dự đoán được gì (|ρ| ≤ 0,13). Vì vậy bài không mở nhánh QGA-R/QGA-S và không gọi QGA-P là method; đóng góp được báo cáo là stability audit có kiểm soát cùng negative result cho giả thuyết predictor gradient ở ngân sách nhỏ. Claim cuối cùng vẫn chờ held-out test và sẽ trả lời trực tiếp RQ1–RQ4.
+Predictor QGA-P **không** vượt được control hình học: khi tách phần lệch riêng của seed, telemetry warm-up không dự đoán được gì (|ρ| ≤ 0,13). Kết luận này được kiểm tra lại ở ngân sách 1.000 step với nhãn sự kiện: AUROC `F_full` đạt `0,958` (Sailor2) và `0,966` (Qwen), transfer đạt `0,881` và `0,940`, nhưng `F_full` chỉ hơn `F_shape` `+0,005…+0,030`, dưới ngưỡng `0,05` đã khóa. Nguyên nhân là bất ổn định tập trung ở `gate_proj` (95,8% và 70,8%) và ở các layer đầu, tức là thuộc tính kiến trúc tái lập giữa seed. Vì vậy bài không mở nhánh QGA-R/QGA-S và không gọi QGA-P là method; đóng góp được báo cáo là stability audit có kiểm soát cùng negative result cho giả thuyết predictor gradient, kèm bản đồ rủi ro kiến trúc transfer được giữa hai model. Claim cuối cùng vẫn chờ held-out test và sẽ trả lời trực tiếp RQ1–RQ4.
 
 ## Phụ lục tái lập
 

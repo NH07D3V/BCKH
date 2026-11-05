@@ -1,0 +1,364 @@
+{
+  "protocol": "docs/gate2b_protocol.md",
+  "seed": 20261031,
+  "bootstrap": 2000,
+  "permutations": 2000,
+  "audit": {
+    "qwen_seed13": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 168,
+      "empty_records": 0
+    },
+    "qwen_seed37": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 168,
+      "empty_records": 0
+    },
+    "qwen_seed73": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 168,
+      "empty_records": 0
+    },
+    "sailor2_seed13": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 336,
+      "empty_records": 0
+    },
+    "sailor2_seed37": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 336,
+      "empty_records": 0
+    },
+    "sailor2_seed73": {
+      "records": 100,
+      "warmup_records": 10,
+      "modules_used": 336,
+      "empty_records": 0
+    }
+  },
+  "feature_sets": {
+    "F_shape": [
+      "depth_norm",
+      "kind_q_proj",
+      "kind_k_proj",
+      "kind_v_proj",
+      "kind_o_proj",
+      "kind_gate_proj",
+      "kind_up_proj",
+      "kind_down_proj"
+    ],
+    "F_grad": [
+      "grad_mean_log",
+      "grad_cv",
+      "grad_slope"
+    ],
+    "F_update": [
+      "update_ratio_mean",
+      "update_ratio_max",
+      "update_ratio_slope"
+    ],
+    "F_cosine": [
+      "cosine_mean",
+      "cosine_sd",
+      "cosine_negative_fraction"
+    ],
+    "F_full": [
+      "grad_mean_log",
+      "grad_cv",
+      "grad_slope",
+      "update_ratio_mean",
+      "update_ratio_max",
+      "update_ratio_slope",
+      "cosine_mean",
+      "cosine_sd",
+      "cosine_negative_fraction",
+      "depth_norm",
+      "kind_q_proj",
+      "kind_k_proj",
+      "kind_v_proj",
+      "kind_o_proj",
+      "kind_gate_proj",
+      "kind_up_proj",
+      "kind_down_proj"
+    ]
+  },
+  "splits": {
+    "qwen_seed73": {
+      "rows": {
+        "train": 336,
+        "test": 168
+      },
+      "feature_sets": {
+        "F_shape": {
+          "auroc": 0.9444444444444444,
+          "auprc": 0.8365269307671268,
+          "ci_low": 0.8494499131441806,
+          "ci_high": 0.9971984840013216,
+          "p_permutation": 0.009995002498750625,
+          "prevalence": 0.10714285714285714,
+          "spearman_spike_records": 0.535184775747173,
+          "alpha": 100.0,
+          "n_train": 336,
+          "n_test": 168
+        },
+        "F_grad": {
+          "auroc": 0.8140740740740741,
+          "auprc": 0.3116769430777285,
+          "ci_low": 0.7318948294597415,
+          "ci_high": 0.8875069444444443,
+          "p_permutation": 0.08395802098950525,
+          "prevalence": 0.10714285714285714,
+          "spearman_spike_records": 0.4473701979491648,
+          "alpha": 10.0,
+          "n_train": 336,
+          "n_test": 168
+        },
+        "F_update": {
+          "auroc": 0.8951851851851852,
+          "auprc": 0.553793964233726,
+          "ci_low": 0.8314164611387781,
+          "ci_high": 0.9516092555156711,
+          "p_permutation": 0.0034982508745627187,
+          "prevalence": 0.10714285714285714,
+          "spearman_spike_records": 0.46064226224038124,
+          "alpha": 0.1,
+          "n_train": 336,
+          "n_test": 168
+        },
+        "F_cosine": {
+          "auroc": 0.7892592592592592,
+          "auprc": 0.30639689475615606,
+          "ci_low": 0.6959976086078689,
+          "ci_high": 0.8714722100585478,
+          "p_permutation": 0.013993003498250875,
+          "prevalence": 0.10714285714285714,
+          "spearman_spike_records": 0.24736996403881306,
+          "alpha": 100.0,
+          "n_train": 336,
+          "n_test": 168
+        },
+        "F_full": {
+          "auroc": 0.9662962962962963,
+          "auprc": 0.9092737043439291,
+          "ci_low": 0.9049465874395266,
+          "ci_high": 0.9995648837934297,
+          "p_permutation": 0.0009995002498750624,
+          "prevalence": 0.10714285714285714,
+          "spearman_spike_records": 0.37759040552839584,
+          "alpha": 10.0,
+          "n_train": 336,
+          "n_test": 168
+        }
+      }
+    },
+    "sailor2_seed73": {
+      "rows": {
+        "train": 672,
+        "test": 336
+      },
+      "feature_sets": {
+        "F_shape": {
+          "auroc": 0.9523416546317309,
+          "auprc": 0.8403809323045698,
+          "ci_low": 0.9275993430444598,
+          "ci_high": 0.9726635031978543,
+          "p_permutation": 0.0004997501249375312,
+          "prevalence": 0.22023809523809523,
+          "spearman_spike_records": 0.7270549846480949,
+          "alpha": 100.0,
+          "n_train": 672,
+          "n_test": 336
+        },
+        "F_grad": {
+          "auroc": 0.7718691974417166,
+          "auprc": 0.39918092162546404,
+          "ci_low": 0.7162604504787633,
+          "ci_high": 0.8249963942611843,
+          "p_permutation": 0.025487256371814093,
+          "prevalence": 0.22023809523809523,
+          "spearman_spike_records": 0.46298005054968233,
+          "alpha": 100.0,
+          "n_train": 672,
+          "n_test": 336
+        },
+        "F_update": {
+          "auroc": 0.8151949659583247,
+          "auprc": 0.4591502600936745,
+          "ci_low": 0.7612502677880363,
+          "ci_high": 0.8688338635143291,
+          "p_permutation": 0.014992503748125937,
+          "prevalence": 0.22023809523809523,
+          "spearman_spike_records": 0.4620710046272753,
+          "alpha": 0.01,
+          "n_train": 672,
+          "n_test": 336
+        },
+        "F_cosine": {
+          "auroc": 0.6961522591293584,
+          "auprc": 0.3570760849494427,
+          "ci_low": 0.6236223339140718,
+          "ci_high": 0.7638480809327168,
+          "p_permutation": 0.02848575712143928,
+          "prevalence": 0.22023809523809523,
+          "spearman_spike_records": 0.2573421989718569,
+          "alpha": 100.0,
+          "n_train": 672,
+          "n_test": 336
+        },
+        "F_full": {
+          "auroc": 0.9578089539921602,
+          "auprc": 0.8750250144443893,
+          "ci_low": 0.935465529276505,
+          "ci_high": 0.9751932863200709,
+          "p_permutation": 0.0004997501249375312,
+          "prevalence": 0.22023809523809523,
+          "spearman_spike_records": 0.7337663166611702,
+          "alpha": 10.0,
+          "n_train": 672,
+          "n_test": 336
+        }
+      }
+    },
+    "qwen_to_sailor2": {
+      "rows": {
+        "train": 504,
+        "test": 1008
+      },
+      "feature_sets": {
+        "F_shape": {
+          "auroc": 0.8511013883143894,
+          "auprc": 0.7120107065100577,
+          "ci_low": 0.8186017898591493,
+          "ci_high": 0.8799619974046262,
+          "p_permutation": 0.02048975512243878,
+          "prevalence": 0.2152777777777778,
+          "spearman_spike_records": 0.5928108655043438,
+          "alpha": 100.0,
+          "n_train": 504,
+          "n_test": 1008
+        },
+        "F_grad": {
+          "auroc": 0.6865019487669461,
+          "auprc": 0.3218877780966351,
+          "ci_low": 0.6477599951006153,
+          "ci_high": 0.7229660267275267,
+          "p_permutation": 0.04897551224387806,
+          "prevalence": 0.2152777777777778,
+          "spearman_spike_records": 0.3411195918135797,
+          "alpha": 100.0,
+          "n_train": 504,
+          "n_test": 1008
+        },
+        "F_update": {
+          "auroc": 0.7884437246208789,
+          "auprc": 0.4623948376512452,
+          "ci_low": 0.7559483658054147,
+          "ci_high": 0.8209428200852326,
+          "p_permutation": 0.04147926036981509,
+          "prevalence": 0.2152777777777778,
+          "spearman_spike_records": 0.39627408024028665,
+          "alpha": 1.0,
+          "n_train": 504,
+          "n_test": 1008
+        },
+        "F_cosine": {
+          "auroc": 0.5969285801674367,
+          "auprc": 0.2719585650743802,
+          "ci_low": 0.554815717962051,
+          "ci_high": 0.6394563147034394,
+          "p_permutation": 0.2223888055972014,
+          "prevalence": 0.2152777777777778,
+          "spearman_spike_records": 0.1541021165781468,
+          "alpha": 100.0,
+          "n_train": 504,
+          "n_test": 1008
+        },
+        "F_full": {
+          "auroc": 0.8806037973282376,
+          "auprc": 0.7651760053652449,
+          "ci_low": 0.8537632465804269,
+          "ci_high": 0.9059694000668447,
+          "p_permutation": 0.0009995002498750624,
+          "prevalence": 0.2152777777777778,
+          "spearman_spike_records": 0.6363023687693775,
+          "alpha": 10.0,
+          "n_train": 504,
+          "n_test": 1008
+        }
+      }
+    },
+    "sailor2_to_qwen": {
+      "rows": {
+        "train": 1008,
+        "test": 504
+      },
+      "feature_sets": {
+        "F_shape": {
+          "auroc": 0.9150589923469388,
+          "auprc": 0.7345807386070422,
+          "ci_low": 0.8537829381812605,
+          "ci_high": 0.9655238582998121,
+          "p_permutation": 0.02448775612193903,
+          "prevalence": 0.1111111111111111,
+          "spearman_spike_records": 0.46124201788056973,
+          "alpha": 0.1,
+          "n_train": 1008,
+          "n_test": 504
+        },
+        "F_grad": {
+          "auroc": 0.8341438137755102,
+          "auprc": 0.3321526819052831,
+          "ci_low": 0.7825415733457154,
+          "ci_high": 0.8805354287700264,
+          "p_permutation": 0.0079960019990005,
+          "prevalence": 0.1111111111111111,
+          "spearman_spike_records": 0.4078430967718997,
+          "alpha": 100.0,
+          "n_train": 1008,
+          "n_test": 504
+        },
+        "F_update": {
+          "auroc": 0.8625239158163265,
+          "auprc": 0.5108758878364431,
+          "ci_low": 0.8168343684397048,
+          "ci_high": 0.9039887164849061,
+          "p_permutation": 0.050974512743628186,
+          "prevalence": 0.1111111111111111,
+          "spearman_spike_records": 0.4013161731263717,
+          "alpha": 0.1,
+          "n_train": 1008,
+          "n_test": 504
+        },
+        "F_cosine": {
+          "auroc": 0.6613520408163265,
+          "auprc": 0.15905250229794837,
+          "ci_low": 0.5952904116979784,
+          "ci_high": 0.7247974380466161,
+          "p_permutation": 0.1629185407296352,
+          "prevalence": 0.1111111111111111,
+          "spearman_spike_records": 0.13318989646287116,
+          "alpha": 100.0,
+          "n_train": 1008,
+          "n_test": 504
+        },
+        "F_full": {
+          "auroc": 0.9395727040816326,
+          "auprc": 0.8667333680189752,
+          "ci_low": 0.8869414455983492,
+          "ci_high": 0.9808234498035341,
+          "p_permutation": 0.0009995002498750624,
+          "prevalence": 0.1111111111111111,
+          "spearman_spike_records": 0.4545363628121521,
+          "alpha": 10.0,
+          "n_train": 1008,
+          "n_test": 504
+        }
+      }
+    }
+  }
+}

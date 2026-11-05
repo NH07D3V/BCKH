@@ -186,6 +186,11 @@ def main() -> None:
 
     runs: dict[str, dict] = {}
     for path in run_files:
+        if "_long_" in path.stem:
+            # The long pilots reuse the same (model, seed) keys but a different
+            # budget; they are analysed by code/analyze_instability.py instead so
+            # the two tables never mix.
+            continue
         match = RUN_PATTERN.search(path.stem)
         if not match:
             print(f"skip (unrecognised name): {path.name}")
